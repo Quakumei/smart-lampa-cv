@@ -1,4 +1,4 @@
-debug_timer = 0
+import time
 
 
 class VirtualButton:
@@ -86,7 +86,8 @@ class VirtualButton:
         if self._read_bf(self.EB_CLKS_R):
             self.clicks = 0
         flags_to_clear = self.EB_CLKS_R | self.EB_STP_R | self.EB_PRS_R | self.EB_HLD_R | self.EB_REL_R
-        self._clr_bf(flags_to_clear)
+        if self._read_bf(flags_to_clear):
+            self._clr_bf(flags_to_clear)
 
     def attach(self, handler):
         """ connect an event handler function(like void f())"""
@@ -276,9 +277,14 @@ class VirtualButton:
             s = True
         else:
             s ^= self._read_bf(self.EB_INV)
+        if not self._read_bf(self.EB_BUSY):
+            if s:
+                self._set_bf(self.EB_BUSY)
+            else:
+                return False
 
         current_time = self.current_millis()
-        elapsed = current_time - self.timer
+        debounce = current_time - self.timer
 
         if s:  # Button is pressed
             if not self._read_bf(self.EB_PRS):  # If button was not previously pressed
@@ -286,29 +292,44 @@ class VirtualButton:
                     self._set_bf(self.EB_DEB)  # Activate debounce
                     self.timer = current_time
                 else:  # First press detected
-                    if elapsed >= self.EB_DEB_TIMEOUT or not self.EB_DEB_TIMEOUT:
+                    if debounce >= self.EB_DEB_TIMEOUT or not self.EB_DEB_TIMEOUT:
                         self._set_bf(self.EB_PRS | self.EB_PRS_R)
                         self.ftimer = current_time
+                        self.timer = current_time
             else:  # Button was already pressed
                 if not self._read_bf(self.EB_HLD):  # Button not hold
-                    if elapsed >= self.EB_HOLD_TIMEOUT:
+                    if debounce >= self.EB_HOLD_TIMEOUT:
                         self._set_bf(self.EB_HLD | self.EB_HLD_R)
+                        self.timer = current_time
                 elif not self._read_bf(self.EB_STP):
-                    if elapsed >= self.EB_STEP_TIMEOUT:
+                    if debounce >= self.EB_STEP_TIMEOUT:
                         self._set_bf(self.EB_STP | self.EB_STP_R)
+                        self.timer = current_time
                 # Handle other conditions as needed
         else:  # Button is not pressed
             if self._read_bf(self.EB_PRS):  # If button was previously pressed
-                if elapsed >= self.EB_DEB_TIMEOUT:
+                if debounce >= self.EB_DEB_TIMEOUT:
                     if not self._read_bf(self.EB_HLD):
                         self.clicks += 1
+                    if self._read_bf(self.EB_EHLD):
+                        self.clicks = 0
                     self._set_bf(self.EB_REL | self.EB_REL_R)
                     self._clr_bf(self.EB_PRS)
             elif self._read_bf(self.EB_REL):
                 if not self._read_bf(self.EB_EHLD):
                     self._set_bf(self.EB_REL_R)
                 self._clr_bf(self.EB_REL | self.EB_EHLD)
-            # Handle clicks and other conditions as needed
+                self.timer = current_time
+            elif self.clicks:
+                if self._read_bf(self.EB_HLD | self.EB_STP) or debounce >= self.EB_CLICK_T:
+                    self._set_bf(self.EB_CLKS_R)
+                elif self.ftimer:
+                    self.ftimer = 0
+            elif self._read_bf(self.EB_BUSY):
+                self._clr_bf(self.EB_HLD | self.EB_STP | self.EB_BUSY)
+                self._set_bf(self.EB_TOUT)
+                self.ftimer = 0
+                self.timer = 0  # test!!
 
             # Reset debounce if necessary
             if self._read_bf(self.EB_DEB):
@@ -319,15 +340,20 @@ class VirtualButton:
     @staticmethod
     def current_millis():
         """ Return the current time in milliseconds. """
-        # return int(time.time() * 1000)
-        return debug_timer
+        return int(time.time() * 1000)
+        # return debug_timer
 
 
-# Example usage
-button = VirtualButton()
-# Assuming `state` is the current state of the button
-while True:
-    state = bool(input())
-    button.tick(state)
-    print(button.action())
-    debug_timer += 25
+debug_timer = 0
+
+
+def demo():
+    global debug_timer
+    """ Example usage """
+    button = VirtualButton()
+    # Assuming `state` is the current state of the button
+    while True:
+        state = bool(input())
+        button.tick(state)
+        print(button.action(), f'{button.flags:16b}')
+        debug_timer += 300
