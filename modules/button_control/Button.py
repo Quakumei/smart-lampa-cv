@@ -2,13 +2,12 @@ import wiringpi
 from wiringpi import GPIO
 
 from modules.button_control.VirtualButton import VirtualButton
-
+wiringpi.wiringPiSetup()
 
 class Button(VirtualButton):
     def __init__(self, npin=0, mode=GPIO.INPUT, btnLevel=GPIO.LOW):
         super().__init__()
         self.pin = npin
-        wiringpi.wiringPiSetup()
         wiringpi.pinMode(self.pin, mode)
         self.setBtnLevel(btnLevel == GPIO.LOW)
 
@@ -32,5 +31,3 @@ class Button(VirtualButton):
         """
         return super().tickRaw(wiringpi.digitalRead(self.pin))
 
-    def flags(self):
-        return f'{super().flags:08b}'
