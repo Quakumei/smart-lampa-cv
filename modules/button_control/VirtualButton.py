@@ -73,7 +73,7 @@ class VirtualButton:
         self.write_bf(self.EB_INV, not level)
 
     def pressISR(self):
-        """ Call this method when the button is pressed. """
+        """ Check if the button is pressed in the interrupt of the button. """
         if not self._read_bf(self.EB_DEB):
             self.timer = self.current_millis()
         self._set_bf(self.EB_DEB | self.EB_BISR)
@@ -260,7 +260,8 @@ class VirtualButton:
             return ButtonStatus.EB_HOLD
         elif action_flags == (self.EB_PRS | self.EB_HLD | self.EB_STP | self.EB_STP_R):
             return ButtonStatus.EB_STEP
-        elif action_flags in [(self.EB_REL | self.EB_REL_R), (self.EB_REL | self.EB_REL_R | self.EB_HLD),
+        elif action_flags in [(self.EB_REL | self.EB_REL_R),
+                              (self.EB_REL | self.EB_REL_R | self.EB_HLD),
                               (self.EB_REL | self.EB_REL_R | self.EB_HLD | self.EB_STP)]:
             return ButtonStatus.EB_RELEASE
         elif action_flags == self.EB_REL_R:
