@@ -6,6 +6,7 @@ from modules.button_control.VirtualButton import VirtualButton
 
 class Button(VirtualButton):
     def __init__(self, npin=0, mode=GPIO.INPUT, btnLevel=GPIO.LOW):
+        super().__init__()
         self.pin = npin
         wiringpi.wiringPiSetup()
         wiringpi.pinMode(self.pin, mode)
@@ -17,7 +18,7 @@ class Button(VirtualButton):
 
     def tick(self, **kwargs):
         """ Process the button, call in the main loop.
-
+            TIPS: Make it async later
         Args:
             **kwargs:
         """
@@ -30,3 +31,6 @@ class Button(VirtualButton):
             **kwargs:
         """
         return super().tickRaw(wiringpi.digitalRead(self.pin))
+
+    def flags(self):
+        return f'{super().flags:08b}'
