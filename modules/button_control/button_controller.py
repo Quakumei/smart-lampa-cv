@@ -4,8 +4,13 @@ from modules.button_control.ButtonStatus import ButtonStatus
 
 
 def button_handler(buttons: tuple):
+<<<<<<< HEAD
     for  idx, btn in enumerate(buttons):
         status = btn.action()
+=======
+    for btn in buttons:
+        idx, status = enumerate(btn.action())
+>>>>>>> origin/main
         print(f'Handler {idx} get {status}')
         match status:
             case ButtonStatus.EB_PRESS:
