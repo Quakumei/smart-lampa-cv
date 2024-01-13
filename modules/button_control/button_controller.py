@@ -17,3 +17,7 @@ def demo():
         a, b = button_l.action(), button_r.action()
         if a or b:
             print(a, b)
+
+
+if __name__ == "__main__":
+    demo()
