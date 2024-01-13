@@ -1,8 +1,10 @@
-import wiringpi
+import wiringpi  # from WiringPi-Python-OP by @lanefu
 from wiringpi import GPIO
 
 from modules.button_control.VirtualButton import VirtualButton
+
 wiringpi.wiringPiSetup()
+
 
 class Button(VirtualButton):
     def __init__(self, npin=0, mode=GPIO.INPUT, btnLevel=GPIO.LOW):
@@ -17,7 +19,7 @@ class Button(VirtualButton):
 
     def tick(self, **kwargs):
         """ Process the button, call in the main loop.
-            TIPS: Make it async later
+            TODO: Make it async later
         Args:
             **kwargs:
         """
@@ -25,9 +27,8 @@ class Button(VirtualButton):
 
     def tickRaw(self, **kwargs):
         """ Process the button without resetting events and without calling callback.
-
+            TODO: Make it async later
         Args:
             **kwargs:
         """
         return super().tickRaw(wiringpi.digitalRead(self.pin))
-

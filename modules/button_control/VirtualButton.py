@@ -30,7 +30,7 @@ class VirtualButton:
     EB_INV = (1 << 12)
     EB_BOTH = (1 << 13)
     EB_BISR = (1 << 14)
-    EB_EHLD = (1 << 15)
+    EB_EHLD = (1 << 15)  # TODO: Some flags may be useless
 
     # times
     EB_DEB_TIMEOUT = 50  # Debounce timeout in milliseconds
@@ -120,48 +120,130 @@ class VirtualButton:
         return self._read_bf(self.EB_HLD_R)
 
     def holdWithClicks(self, num: int) -> bool:
+        """
+        Determines if the object has been held with a specific number of clicks.
+        Args:
+            num (int): The number of clicks to check for.
+        Returns:
+            bool: True if the number of clicks equals 'num' and the object is held, False otherwise.
+        """
         return self.clicks == num and self.hold()
 
     def holding(self) -> bool:
+        """
+        Checks if the object is in a holding state.
+        Returns:
+            bool: True if the object's state matches the holding condition, False otherwise.
+        """
         return self._eq_bf(self.EB_PRS | self.EB_HLD, self.EB_PRS | self.EB_HLD)
 
     def holdingWithClicks(self, num) -> bool:
+        """
+        Checks if the object is being held with a specific number of clicks.
+        Args:
+            num: The number of clicks to check for.
+        Returns:
+            bool: True if the object is being held and the number of clicks equals 'num', False otherwise.
+        """
         return self.clicks == num and self.holding()
 
     def step(self) -> bool:
+        """
+        Determines if a step action has occurred.
+        Returns:
+            bool: True if a step action is detected, False otherwise.
+        """
         return self._read_bf(self.EB_STP_R)
 
     def stepWithClicks(self, num: int) -> bool:
+        """
+        Checks if a step action has occurred with a specific number of clicks.
+        Args:
+            num (int): The number of clicks to check for.
+        Returns:
+            bool: True if a step action has occurred with 'num' clicks, False otherwise.
+        """
         return self.clicks == num and self.step()
 
     def hasClicks(self) -> bool:
+        """
+        Checks if any click action has occurred.
+        Returns:
+            bool: True if a click action is detected, False otherwise.
+        """
         return self._eq_bf(self.EB_CLKS_R | self.EB_HLD, self.EB_CLKS_R)
 
     def hasClicksWithClicks(self, num: int) -> bool:
+        """
+        Checks if a specific number of clicks has occurred.
+        Args:
+            num (int): The number of clicks to check for.
+        Returns:
+            bool: True if the number of clicks equals 'num', False otherwise.
+        """
         return self.clicks == num and self.hasClicks()
 
     def getClicks(self) -> int:
+        """
+        Retrieves the current number of clicks.
+        Returns:
+            int: The number of clicks.
+        """
         return self.clicks
 
-    # skip getStep()
+    # skip getStep() # TODO: Add steps support
 
     def releaseHold(self) -> bool:
+        """
+        Checks if a hold release action has occurred.
+        Returns:
+            bool: True if a hold release action is detected, False otherwise.
+        """
         return self._eq_bf(self.EB_REL_R | self.EB_REL | self.EB_HLD | self.EB_STP, self.EB_REL_R | self.EB_HLD)
 
     def releaseHoldWithClicks(self, num: int) -> bool:
+        """
+        Checks if a hold release action has occurred with a specific number of clicks.
+        Args:
+            num (int): The number of clicks to check for.
+        Returns:
+            bool: True if a hold release action with 'num' clicks is detected, False otherwise.
+        """
         return self.clicks == num and self._eq_bf(self.EB_CLKS_R | self.EB_HLD | self.EB_STP,
                                                   self.EB_CLKS_R | self.EB_HLD)
 
     def releaseStep(self) -> bool:
+        """
+        Determines if a step release action has occurred.
+        Returns:
+            bool: True if a step release action is detected, False otherwise.
+        """
         return self._eq_bf(self.EB_REL_R | self.EB_REL | self.EB_STP, self.EB_REL_R | self.EB_STP)
 
     def releaseStepWithClicks(self, num) -> bool:
+        """
+        Checks if a step release action has occurred with a specific number of clicks.
+        Args:
+            num: The number of clicks to check for.
+        Returns:
+            bool: True if a step release action with 'num' clicks is detected, False otherwise.
+        """
         return self.clicks == num and self.releaseStep()
 
     def waiting(self) -> bool:
+        """
+        Determines if the object is in a waiting state based on click conditions.
+        Returns:
+            bool: True if the object is waiting, False otherwise.
+        """
         return self.clicks and self._eq_bf(self.EB_PRS | self.EB_REL, 0)
 
     def busy(self) -> bool:
+        """
+        Checks if the object is in a busy state.
+        Returns:
+            bool: True if the object is busy, False otherwise.
+        """
         return self._read_bf(self.EB_BUSY)
 
     def action(self):
@@ -195,33 +277,76 @@ class VirtualButton:
         return None
 
     def timeout(self, tout):
+        """
+        Checks if a timeout condition has been met.
+        Args:
+            tout: The timeout duration to check against.
+        Returns:
+            bool: True if the current time exceeds the set timeout period, False otherwise.
+        """
         if self._read_bf(self.EB_TOUT) and (self.current_millis() - self.timer) > tout:
             self._clr_bf(self.EB_TOUT)
             return True
         return False
 
     def pressFor(self) -> int:
+        """
+        Calculates the duration for which a press action has been maintained.
+        Returns:
+            int: The duration (in milliseconds) of the press action. Returns 0 if no press action is active.
+        """
         if self.ftimer:
             return self.current_millis() - self.ftimer
         return 0
 
     def pressForTime(self, ms: int):
+        """
+        Determines if a press action has been maintained for longer than a specified duration.
+        Args:
+            ms (int): The duration (in milliseconds) to check against.
+        Returns:
+            bool: True if the press duration exceeds 'ms', False otherwise.
+        """
         return self.pressFor() > ms
 
     def holdFor(self):
+        """
+        Calculates the duration for which a hold action has been maintained.
+        Returns:
+            int: The duration (in milliseconds) of the hold action, adjusted for hold timeout. Returns 0 if no hold action is active.
+        """
         if self._read_bf(self.EB_HLD):
             return self.pressFor() - self.EB_HOLD_TIMEOUT
         return 0
 
     def holdForTime(self, ms: int):
+        """
+        Determines if a hold action has been maintained for longer than a specified duration.
+        Args:
+            ms (int): The duration (in milliseconds) to check against.
+        Returns:
+            bool: True if the hold duration exceeds 'ms', False otherwise.
+        """
         return self.holdFor() > ms
 
     def stepFor(self):
+        """
+        Calculates the duration for which a step action has been maintained.
+        Returns:
+            int: The duration (in milliseconds) of the step action, adjusted for double the hold timeout. Returns 0 if no step action is active.
+        """
         if self._read_bf(self.EB_STP):
             return self.pressFor() - self.EB_HOLD_TIMEOUT * 2
         return 0
 
     def stepForTime(self, ms: int):
+        """
+       Determines if a step action has been maintained for longer than a specified duration.
+       Args:
+           ms (int): The duration (in milliseconds) to check against.
+       Returns:
+           bool: True if the step duration exceeds 'ms', False otherwise.
+       """
         return self.stepFor() > ms
 
     """ Poll methods """
@@ -350,7 +475,6 @@ debug_timer = 0
 def demo():
     global debug_timer
     """ Example usage """
-    # Example usage
     button = VirtualButton()
     # Assuming `state` is the current state of the button
     while True:
