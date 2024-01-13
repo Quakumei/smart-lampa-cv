@@ -254,7 +254,6 @@ class VirtualButton:
         return self._pollBtn(s)
 
     # Utility functions
-    _flags = 0  # all flags
 
     def _set_bf(self, flag):
         self.flags |= flag
@@ -350,6 +349,7 @@ debug_timer = 0
 def demo():
     global debug_timer
     """ Example usage """
+    # Example usage
     button = VirtualButton()
     # Assuming `state` is the current state of the button
     while True:
