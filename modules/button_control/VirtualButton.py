@@ -1,5 +1,7 @@
 import time
 
+from modules.button_control.ButtonStatus import ButtonStatus
+
 
 class VirtualButton:
     # flags
@@ -246,35 +248,35 @@ class VirtualButton:
         """
         return self._read_bf(self.EB_BUSY)
 
-    def action(self):
+    def action(self) -> ButtonStatus:
         """
         Returns a code representing the last action of the button.
         """
         action_flags = self.flags & 0b111111111
 
         if action_flags == (self.EB_PRS | self.EB_PRS_R):
-            return "EB_PRESS"
+            return ButtonStatus.EB_PRESS
         elif action_flags == (self.EB_PRS | self.EB_HLD | self.EB_HLD_R):
-            return "EB_HOLD"
+            return ButtonStatus.EB_HOLD
         elif action_flags == (self.EB_PRS | self.EB_HLD | self.EB_STP | self.EB_STP_R):
-            return "EB_STEP"
+            return ButtonStatus.EB_STEP
         elif action_flags in [(self.EB_REL | self.EB_REL_R), (self.EB_REL | self.EB_REL_R | self.EB_HLD),
                               (self.EB_REL | self.EB_REL_R | self.EB_HLD | self.EB_STP)]:
-            return "EB_RELEASE"
+            return ButtonStatus.EB_RELEASE
         elif action_flags == self.EB_REL_R:
-            return "EB_CLICK"
+            return ButtonStatus.EB_CLICK
         elif action_flags == self.EB_CLKS_R:
-            return "EB_CLICKS"
+            return ButtonStatus.EB_CLICKS
         elif action_flags == (self.EB_REL_R | self.EB_HLD):
-            return "EB_REL_HOLD"
+            return ButtonStatus.EB_REL_HOLD
         elif action_flags == (self.EB_CLKS_R | self.EB_HLD):
-            return "EB_REL_HOLD_C"
+            return ButtonStatus.EB_REL_HOLD_C
         elif action_flags == (self.EB_REL_R | self.EB_HLD | self.EB_STP):
-            return "EB_REL_STEP"
+            return ButtonStatus.EB_REL_STEP
         elif action_flags == (self.EB_CLKS_R | self.EB_HLD | self.EB_STP):
-            return "EB_REL_STEP_C"
+            return ButtonStatus.EB_REL_STEP_C
 
-        return None
+        return ButtonStatus.EB_NONE
 
     def timeout(self, tout):
         """
