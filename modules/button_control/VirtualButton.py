@@ -243,7 +243,8 @@ class VirtualButton:
                 self._set_bf(self.EB_BOTH)
             return self.tick(0)
 
-    def tick(self, s):
+    def tick(self, s):  # TODO: make tick() async
+        # Handling virtual button
         self.clear()
         state_changed = self._pollBtn(s)
         if self.callback and state_changed:
@@ -329,7 +330,7 @@ class VirtualButton:
                 self._clr_bf(self.EB_HLD | self.EB_STP | self.EB_BUSY)
                 self._set_bf(self.EB_TOUT)
                 self.ftimer = 0
-                self.timer = 0  # test!!
+                self.timer = 0  # TODO: test!!
 
             # Reset debounce if necessary
             if self._read_bf(self.EB_DEB):
