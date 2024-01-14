@@ -397,7 +397,7 @@ class VirtualButton:
         self._set_bf(x) if v else self._clr_bf(x)
 
     def _eq_bf(self, x: int, y: int):
-        return (self._flags & x) == y
+        return (self.flags & x) == y
 
     def _pollBtn(self, s: bool) -> bool:
         if self._read_bf(self.EB_BISR):
@@ -457,7 +457,7 @@ class VirtualButton:
                 self._clr_bf(self.EB_HLD | self.EB_STP | self.EB_BUSY)
                 self._set_bf(self.EB_TOUT)
                 self.ftimer = 0
-                self.timer = 0  # TODO: test!!
+                self.timer = 0
 
             # Reset debounce if necessary
             if self._read_bf(self.EB_DEB):
