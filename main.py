@@ -1,7 +1,7 @@
 import multiprocessing
 
 from main_controller import main_controller
-from modules.button_control import button_controller
+from modules.button_control import button_controller_dev
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
     # led_proc.start()
     # button controller
     parent_button_action_conn, child_button_action_conn = multiprocessing.Pipe(duplex=False)
-    button_proc = multiprocessing.Process(target=button_controller.run, args=(child_button_action_conn,))
+    button_proc = multiprocessing.Process(target=button_controller_dev.run, args=(child_button_action_conn,))
     button_proc.start()
     # main controller
     main_proc = multiprocessing.Process(target=main_controller.run, args=(parent_button_action_conn,))
@@ -21,13 +21,6 @@ def main():
 
     button_proc.join()
     main_proc.join()
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":

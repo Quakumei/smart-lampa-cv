@@ -1,6 +1,5 @@
 import time
 from multiprocessing import Pipe
-from multiprocessing.connection import Connection
 
 from config.settings import PIN_BUTTON_L, PIN_BUTTON_R
 from modules.button_control.Button import Button
@@ -50,10 +49,8 @@ def button_handler(conn: Pipe, btn: Button, buttons: tuple[Button, Button], swip
     # Determine which button (left or right) is being interacted with
     if btn == left_button:
         button_prefix = 'L_'
-        last_click_time = last_left_click_time
     elif btn == right_button:
         button_prefix = 'R_'
-        last_click_time = last_right_click_time
     else:
         return  # Unknown button
 
@@ -89,17 +86,17 @@ def send_msg(conn, message):
     conn.send(message)
 
 
-def run(conn: Connection):
+def run(conn):
+    print("Button controller: Running", flush=True)
     button_l = Button(PIN_BUTTON_L)
     button_r = Button(PIN_BUTTON_R)
     buttons = (button_l, button_r)
     button_l.attach(lambda: button_handler(conn, button_l, buttons))
     button_r.attach(lambda: button_handler(conn, button_r, buttons))
-    print("Start")
     while True:
         button_l.tick()
         button_r.tick()
 
 
 if __name__ == "__main__":
-    run()
+    run(None)
