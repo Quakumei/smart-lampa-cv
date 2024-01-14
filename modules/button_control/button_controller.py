@@ -1,5 +1,6 @@
 import time
 from multiprocessing import Pipe
+from multiprocessing.connection import Connection
 
 from config.settings import PIN_BUTTON_L, PIN_BUTTON_R
 from modules.button_control.Button import Button
@@ -88,7 +89,7 @@ def send_msg(conn, message):
     conn.send(message)
 
 
-def run(conn):
+def run(conn: Connection):
     button_l = Button(PIN_BUTTON_L)
     button_r = Button(PIN_BUTTON_R)
     buttons = (button_l, button_r)
