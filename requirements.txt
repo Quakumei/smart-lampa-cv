@@ -4,3 +4,4 @@ smbus2~=0.4.3
 spidev==3.6
 numpy>=1.26.2
 #numba
+#install wiringpi from github WiringPi-Python-OP by @lanefu
