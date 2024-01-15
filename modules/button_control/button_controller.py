@@ -82,10 +82,6 @@ def button_handler(conn: Pipe, btn: Button, buttons: tuple[Button, Button], swip
         conn.send(ButtonAction[button_prefix + 'STEP'])
 
 
-def send_msg(conn, message):
-    conn.send(message)
-
-
 def run(conn):
     print("Button controller: Running", flush=True)
     button_l = Button(PIN_BUTTON_L)
@@ -96,7 +92,3 @@ def run(conn):
     while True:
         button_l.tick()
         button_r.tick()
-
-
-if __name__ == "__main__":
-    run(None)
