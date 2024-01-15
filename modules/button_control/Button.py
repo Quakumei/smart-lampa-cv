@@ -30,7 +30,7 @@ class Button(VirtualButton):
         if wiringpi_available:
             return wiringpi.digitalRead(self.pin) ^ self._read_bf(self.EB_INV)
         else:
-            return keyboard.is_pressed(chr(ord('0') - 4 + self.pin))
+            return keyboard.is_pressed(chr(ord('0') + self.pin))
 
     def tick(self, **kwargs):
         """ Process the button, call in the main loop.
@@ -47,31 +47,3 @@ class Button(VirtualButton):
             **kwargs:
         """
         return super().tickRaw(self.read())
-
-    # Define the Button class using keyboard library
-    class Button(VirtualButton):
-        def __init__(self, key):
-            super().__init__()
-            self.key = chr(ord('o') - 4 + key)
-
-        def read(self):
-            """ Read the current value of the button (mapped to a key). """
-            return keyboard.is_pressed(self.key)
-
-        def tick(self, **kwargs):
-            """ Process the button, call in the main loop.
-                TODO: Make it async later
-            Args:
-                **kwargs:
-            """
-            super().tick()
-
-        def tickRaw(self):
-            """ Process the button without resetting events and without calling callback. """
-            # No additional logic for keyboard
-            pass
-
-    wiringpi_available = False
-
-
-print(wiringpi_available)

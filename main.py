@@ -14,14 +14,16 @@ def main():
     # button controller
     parent_button_action_conn, child_button_action_conn = multiprocessing.Pipe(duplex=False)
     button_proc = multiprocessing.Process(target=button_controller.run, args=(child_button_action_conn,))
+    print("Start button process starting...")
     button_proc.start()
     # main controller
     main_proc = multiprocessing.Process(target=main_controller.run, args=(parent_button_action_conn,))
+    print("Main process starting...")
     main_proc.start()
 
     button_proc.join()
     main_proc.join()
-
+    print("Finish")
 
 if __name__ == "__main__":
     main()
