@@ -1,85 +1,86 @@
 import time
 from multiprocessing import Pipe
 
-from config.settings import PIN_BUTTON_L, PIN_BUTTON_R
+from config.settings import PIN_BUTTON_L, PIN_BUTTON_R, SWIPE_TIMEOUT
 from modules.button_control.Button import Button
 from modules.button_control.ButtonActions import ButtonAction
+from modules.button_control.ButtonStatus import ButtonStatus
 
-# def button_handler(conn: Pipe, btn: Button, buttons: tuple[Button]):
-#     status = btn.action()
-#     match status:
-#         case ButtonStatus.EB_PRESS:
-#             print("Press")
-#         case ButtonStatus.EB_HOLD:
-#             print("Hold")
-#         case ButtonStatus.EB_STEP:
-#             print("Step")
-#         case ButtonStatus.EB_RELEASE:
-#             print("Release")
-#         case ButtonStatus.EB_CLICK:
-#             print("Click")
-#         case ButtonStatus.EB_CLICKS:
-#             print(f"Clicks: {btn.getClicks()} times")
-#         case ButtonStatus.EB_REL_HOLD:
-#             print("Release Hold")
-#         case ButtonStatus.EB_REL_HOLD_C:
-#             print("Release Hold C")
-#         case ButtonStatus.EB_REL_STEP:
-#             print("Release Step")
-#         case ButtonStatus.EB_REL_STEP_C:
-#             print(f"Release Step C with {btn.getClicks()} clicks")
-#         case _:
-#             pass
-#     if btn.click():
-#         conn.send({'pin': btn.pin, 'event': ButtonStatus.EB_CLICK})
-#     if btn.hold():
-#         conn.send({'pin': btn.pin, 'event': ButtonStatus.EB_HOLD})
-#     if btn.step():
-#         conn.send({'pin': btn.pin, 'event': ButtonStatus.EB_STEP})
-#     if btn.holdWithClicks(1):
-#         conn.send({'pin': btn.pin, 'event': ButtonStatus.EB_REL_HOLD_C,})
-last_left_click_time = 0
-last_right_click_time = 0
+last_click_time = 0
+last_click_prefix = None
+flags_swipe = [False, False]
 
 
-def button_handler(conn: Pipe, btn: Button, buttons: tuple[Button, Button], swipe_timeout=0.5):
-    global last_left_click_time, last_right_click_time
+def get_state(btn: Button, buttons: tuple):
+    global last_click_time, last_click_prefix, flags_swipe
     left_button, right_button = buttons
 
     # Determine which button (left or right) is being interacted with
+    prefixes = ['L_', 'R_']
     if btn == left_button:
-        button_prefix = 'L_'
+        button_prefix = 0
     elif btn == right_button:
-        button_prefix = 'R_'
+        button_prefix = 1
     else:
         return  # Unknown button
 
     current_time = time.time()
+    status = btn.action()
+    res = None
+    match status:
+        # case ButtonStatus.EB_PRESS:
+        #     print("Press")
+        # case ButtonStatus.EB_HOLD:
+        #     print("Hold")
+        #     return ButtonAction.L_HOLD.value+button_prefix
+        # case ButtonStatus.EB_STEP:
+        #     print("Step")
+        # case ButtonStatus.EB_RELEASE:
+        #     print("Release")
+        case ButtonStatus.EB_CLICK:
+            if (current_time - last_click_time) <= SWIPE_TIMEOUT:
+                if last_click_prefix == 0 and button_prefix == 1:
+                    # print("R_SWIPE")
+                    flags_swipe = [True, True]
+                    res = ButtonAction.R_SWIPE.value
+                elif last_click_prefix == 1 and button_prefix == 0:
+                    # print("L_SWIPE")
+                    flags_swipe = [True, True]
+                    res = ButtonAction.L_SWIPE.value
+            last_click_time = current_time
+            last_click_prefix = button_prefix
 
-    # Check for specific button actions and send corresponding enum to the pipe
-    if btn.click():
-        conn.send(ButtonAction[button_prefix + 'CLICK'])
+        case ButtonStatus.EB_CLICKS:
+            # print(f"Clicks: {btn.getClicks()} times")
+            clicks = btn.getClicks()
+            if not flags_swipe[button_prefix]:
+                match clicks:
+                    case 1:
+                        # print(f"{prefixes[button_prefix]}CLICK")
+                        res = ButtonAction.L_CLICK.value + button_prefix
+                    case 2:
+                        # print(f"{prefixes[button_prefix]}DOUBLE_CLICK")
+                        res = ButtonAction.L_DOUBLE_CLICK.value + button_prefix
+            flags_swipe[button_prefix] = False
 
-        # Check for swipe action
-        if button_prefix == 'L_' and (current_time - last_right_click_time) <= swipe_timeout:
-            conn.send(ButtonAction['R_SWIPE'])
-        elif button_prefix == 'R_' and (current_time - last_left_click_time) <= swipe_timeout:
-            conn.send(ButtonAction['L_SWIPE'])
+        # case ButtonStatus.EB_REL_HOLD:
+        #     print("Release Hold")
+        # case ButtonStatus.EB_REL_HOLD_C:
+        #     print("Release Hold C")
+        case ButtonStatus.EB_REL_STEP:
+            # print("Release Step")
+            res = ButtonAction.L_REL_HOLD.value + button_prefix
+        # case ButtonStatus.EB_REL_STEP_C:
+        #     print(f"Release Step C with {btn.getClicks()} clicks")
+        case _:
+            pass
+    return res
 
-        # Update last click time
-        if button_prefix == 'L_':
-            last_left_click_time = current_time
-        elif button_prefix == 'R_':
-            last_right_click_time = current_time
 
-    elif btn.hold():
-        conn.send(ButtonAction[button_prefix + 'HOLD'])
-    elif btn.holdWithClicks(1):
-        conn.send(ButtonAction[button_prefix + 'CLICK_HOLD'])
-    elif btn.getClicks() == 2:
-        conn.send(ButtonAction[button_prefix + 'DOUBLE_CLICK'])
-    elif btn.step():
-        conn.send(ButtonAction[button_prefix + 'STEP'])
+def button_handler(conn: Pipe, btn: Button, buttons: tuple[Button, Button]):
+    state = get_state(btn, buttons)
+    if state is not None:
+        conn.send(state)
 
 
 def run(conn):

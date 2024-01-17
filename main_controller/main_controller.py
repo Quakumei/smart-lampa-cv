@@ -1,4 +1,8 @@
 # consume work
+from modules.button_control.ButtonActions import ButtonAction
+from modules.button_control.ButtonStatus import ButtonStatus
+
+
 def run(button_conn):
     print('Receiver: Running', flush=True)
     # consume work
@@ -6,9 +10,4 @@ def run(button_conn):
         # get a unit of work
         item = button_conn.recv()
         # report
-        print(f'>receiver got {item}', flush=True)
-        # check for stop
-        if item is None:
-            break
-    # all done
-    print('Receiver: Done', flush=True)
+        print(f'>receiver got {ButtonAction(item)}', flush=True)
