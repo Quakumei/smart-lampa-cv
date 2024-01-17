@@ -30,9 +30,9 @@ def get_state(btn: Button, buttons: tuple):
     match status:
         # case ButtonStatus.EB_PRESS:
         #     print("Press")
-        # case ButtonStatus.EB_HOLD:
-        #     print("Hold")
-        #     return ButtonAction.L_HOLD.value+button_prefix
+        case ButtonStatus.EB_HOLD:
+            # print("Hold")
+            return ButtonAction.L_HOLD.value+button_prefix
         # case ButtonStatus.EB_STEP:
         #     print("Step")
         # case ButtonStatus.EB_RELEASE:
