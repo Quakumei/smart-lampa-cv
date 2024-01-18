@@ -1,34 +1,28 @@
-import time
-import numpy
+import sympy as sp
+from math import sin, cos
 
-def define_catch_pos(
-        servo1,    # нижний сервомотор
-        servo2,    # верхний сервомотор
+def define_new_camera_pos(
+        cam_x,     # положение нижнего сервомотора (вращающегося по оси х)
+        cam_y,     # положение верхнего сервомотора (вращающегося по оси у)
+        cam_v,     # скорость "камеры"
         cur_x,     # координата х руки
         cur_y,     # координата у руки
-        prev_x,  # предыдущая координата х руки
-        prev_y,  # предыдущая координата у руки
+        cur_t,     # текущий момент времени
+        prev_x,    # предыдущая координата х руки
+        prev_y,    # предыдущая координата у руки
+        prev_t     # предыдущий момент времени
     ):
-    cur_t = int(time.time())
-    prev_t = servo1.previous_millis
-
     target_x_v = (cur_x - prev_x) / (cur_t - prev_t) # скорость руки по оси х
     target_y_v = (cur_y - prev_y) / (cur_t - prev_t) # скорость руки по оси y
 
-    # уравнение для нахождения момента времени пересечения камеры и руки
-    eq_roots =\
-    numpy.roots([
-        (servo1.acceleration - servo2.acceleration) / 2,
-        (cur_y - prev_y - cur_x + prev_x) / (cur_t - prev_t)
-            + servo1.current_speed - servo2.current_speed,
-        prev_t / (cur_t - prev_t) * (cur_x - prev_x - cur_y + prev_y)
-            + servo1.current_pos - servo2.current_pos - prev_x + prev_y
-    ])
-    # выбираем первый неотрицательный корень
-    catch_t = next((root for root in eq_roots if root >= 0), 0)
+    p, t = sp.symbols('p t')
+    eq1 = (cam_v * sp.cos(p) + target_x_v) * t - cur_x + cam_x
+    eq2 = (cam_v * sp.sin(p) + target_y_v) * t - cur_y + cam_y
+    solution = sp.solve([eq1, eq2], (p, t), dict=True)
 
-    # определяем точку перехвата
-    catch_x = cur_x + target_x_v * (catch_t - cur_t)
-    catch_y = cur_y + target_y_v * (catch_t - cur_t)
+    print(solution)
+
+    catch_x = cam_x + cam_v * cos(solution[0 if cur_y > 90 else 1][p]) * solution[0 if cur_y > 90 else 1][t]
+    catch_y = cam_y + cam_v * sin(solution[0 if cur_y > 90 else 1][p]) * solution[0 if cur_y > 90 else 1][t]
 
     return (catch_x, catch_y)

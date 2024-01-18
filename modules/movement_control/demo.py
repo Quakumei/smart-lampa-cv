@@ -1,5 +1,6 @@
 import threading
 import time
+from math import sqrt
 
 from smbus2 import SMBus
 from config.settings import DRIVER_ADDR
@@ -80,12 +81,15 @@ def main():
             hand_x = 90 # здесь получаем очередной х руки
             hand_y = 90 # здесь получаем очередной у руки
             (servo1.target_pos, servo2.target_pos) = define_catch_pos(
-                servo1,
-                servo2,
+                servo1.current_pos,
+                servo2.current_pos,
+                sqrt(servo1.current_speed ** 2 + servo2.current_speed ** 2),
                 hand_x,
                 hand_y,
+                int(time.time()),
                 hand_prev_x,
-                hand_prev_y
+                hand_prev_y,
+                servo1.previous_millis
             )
             hand_prev_x = hand_x
             hand_prev_y = hand_y
