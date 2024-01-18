@@ -32,7 +32,10 @@ def get_state(btn: Button, buttons: tuple):
         #     print("Press")
         case ButtonStatus.EB_HOLD:
             # print("Hold")
-            return ButtonAction.L_HOLD.value+button_prefix
+            if btn.getClicks():
+                return ButtonAction.L_CLICK_HOLD.value+button_prefix
+            else:
+                return ButtonAction.L_HOLD.value+button_prefix
         # case ButtonStatus.EB_STEP:
         #     print("Step")
         # case ButtonStatus.EB_RELEASE:

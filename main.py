@@ -1,6 +1,6 @@
 import multiprocessing
 
-from main_controller import main_controller
+from main_controller import controller
 from modules.button_control import button_controller
 
 
@@ -17,7 +17,8 @@ def main():
     print("Start button process starting...")
     button_proc.start()
     # main controller
-    main_proc = multiprocessing.Process(target=main_controller.run, args=(parent_button_action_conn,))
+    my_controller = controller.MainController(parent_button_action_conn)
+    main_proc = multiprocessing.Process(target=my_controller.run)
     print("Main process starting...")
     main_proc.start()
 
