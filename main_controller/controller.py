@@ -3,29 +3,27 @@ from multiprocessing.connection import Connection
 
 from main_controller.LampMode import LampMode
 from modules.button_control.ButtonActions import ButtonAction
-from modules.button_control.ButtonStatus import ButtonStatus
-
-import multiprocessing
 
 
 # Main controller process
 class MainController:
-    def __init__(self, pipe: Connection):
-        self.reactions = None
-        self.button_pipe = pipe
+    def __init__(self, b_pipe: Connection, l_pipe: Connection):
+        self.button_reactions = None
+        self.button_pipe = b_pipe
+        self.led_pipe = l_pipe
         self.current_mode = LampMode.LIGHT_TEMPERATURE
         self.setup_reactions()
 
     def setup_reactions(self):
-        self.reactions = {
+        self.button_reactions = {
             ButtonAction.L_CLICK: self.toggle_mode_backward,
             ButtonAction.R_CLICK: self.toggle_mode_forward,
-            ButtonAction.L_HOLD: self.start_brightness_change,
-            ButtonAction.R_HOLD: self.start_brightness_change,
-            ButtonAction.L_REL_HOLD: self.stop_brightness_change,
-            ButtonAction.R_REL_HOLD: self.stop_brightness_change,
-            ButtonAction.L_CLICK_HOLD: self.start_intensity_change,
-            ButtonAction.R_CLICK_HOLD: self.start_intensity_change,
+            ButtonAction.L_HOLD: self.start_brightness_up,
+            ButtonAction.R_HOLD: self.start_brightness_down,
+            ButtonAction.L_REL_HOLD: self.stop_change,
+            ButtonAction.R_REL_HOLD: self.stop_change,
+            ButtonAction.L_CLICK_HOLD: self.start_intensity_up,
+            ButtonAction.R_CLICK_HOLD: self.start_intensity_down,
             ButtonAction.L_SWIPE: self.swipe_function,
             ButtonAction.R_SWIPE: self.swipe_function
         }
@@ -41,15 +39,23 @@ class MainController:
         self.current_mode = LampMode(value)
         print(f"mode {self.current_mode}")
 
-    def start_brightness_change(self):
+    def start_brightness_up(self):
         # Logic to start changing brightness
         pass
 
-    def stop_brightness_change(self):
-        # Logic to stop changing brightness
+    def start_brightness_down(self):
+        # Logic to start changing brightness
         pass
 
-    def start_intensity_change(self):
+    def stop_change(self):
+        # Logic to stop changing anything
+        pass
+
+    def start_intensity_up(self):
+        # Logic to start changing intensity/color temperature
+        pass
+
+    def start_intensity_down(self):
         # Logic to start changing intensity/color temperature
         pass
 
@@ -63,5 +69,5 @@ class MainController:
             if self.button_pipe.poll():
                 action = ButtonAction(self.button_pipe.recv())
                 print(f'>Main Controller got {action}', flush=True)
-                if action in self.reactions:
-                    self.reactions[action]()
+                if action in self.button_reactions:
+                    self.button_reactions[action]()
