@@ -5,3 +5,4 @@ spidev==3.6
 numpy>=1.26.2
 #numba
 #install wiringpi from github WiringPi-Python-OP by @lanefu
+keyboard>=0.13.5
