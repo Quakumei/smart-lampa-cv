@@ -3,6 +3,7 @@ import multiprocessing
 from main_controller import controller
 from modules.button_control import button_controller
 from modules.led_control import led_controller
+from modules.hand_detector import hand_detector
 
 
 def main():
@@ -16,18 +17,31 @@ def main():
     led_proc = multiprocessing.Process(target=led_c.run)
     led_proc.start()
     # button controller
-    parent_button_action_conn, child_button_action_conn = multiprocessing.Pipe(duplex=False)
-    button_proc = multiprocessing.Process(target=button_controller.run, args=(child_button_action_conn,))
+    parent_button_action_conn, child_button_action_conn = multiprocessing.Pipe(
+        duplex=False
+    )
+    button_proc = multiprocessing.Process(
+        target=button_controller.run, args=(child_button_action_conn,)
+    )
     print("Start button process starting...")
     button_proc.start()
     # main controller
-    my_controller = controller.MainController(parent_button_action_conn, parent_led_action_conn)
+    my_controller = controller.MainController(
+        parent_button_action_conn, parent_led_action_conn
+    )
     main_proc = multiprocessing.Process(target=my_controller.run)
     print("Main process starting...")
     main_proc.start()
+    # hand detection
+    print("Camera starting...")
+    hand_detection_proc = multiprocessing.Process(
+        target=lambda: hand_detector.detect_hand(debug=True)
+    )
+    hand_detection_proc.start()
 
     button_proc.join()
     main_proc.join()
+    hand_detection_proc.join()
     print("Finish")
 
 
