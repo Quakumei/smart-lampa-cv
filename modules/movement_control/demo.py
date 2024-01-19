@@ -1,10 +1,11 @@
 import threading
 import time
+from math import sqrt
 
 from smbus2 import SMBus
-
 from config.settings import DRIVER_ADDR
 
+from rapprochement import define_catch_pos
 
 class ServoController:
     def __init__(self, acc, max_s, init_pulse):
@@ -67,19 +68,37 @@ class ServoController:
 
 def main():
     bus = SMBus(0)
-    servo1 = ServoController()
-    servo2 = ServoController()
+    servo1 = ServoController() # нижний
+    servo2 = ServoController() # верхний
 
     def i2c_request(args):
         bus.write_i2c_block_data(DRIVER_ADDR, 0, args)
 
     def tick_servos():
+        hand_prev_x = 0
+        hand_prev_y = 0
         while True:
+            hand_x = 90 # здесь получаем очередной х руки
+            hand_y = 90 # здесь получаем очередной у руки
+            (servo1.target_pos, servo2.target_pos) = define_catch_pos(
+                servo1.current_pos,
+                servo2.current_pos,
+                sqrt(servo1.current_speed ** 2 + servo2.current_speed ** 2),
+                hand_x,
+                hand_y,
+                int(time.time()),
+                hand_prev_x,
+                hand_prev_y,
+                servo1.previous_millis
+            )
+            hand_prev_x = hand_x
+            hand_prev_y = hand_y
+
             servo1pos = servo1.tick()
-            time.sleep(0.01)  # temp
+            time.sleep(0.01)
             servo2pos = servo2.tick()
             i2c_request([servo1pos, servo2pos])
-            time.sleep(0.01)  # temp
+            time.sleep(0.01)
 
     # поток генерации I2C-сигналов
     t = threading.Thread(target=tick_servos, daemon=True)
