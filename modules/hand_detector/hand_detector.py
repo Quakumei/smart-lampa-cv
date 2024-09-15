@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import time
+from multiprocessing import Pipe
 
 import torch
 import cv2
@@ -13,7 +14,8 @@ from .visualization import draw_detections, draw_landmarks, draw_roi, HAND_CONNE
 WINDOW = "Lamp cam"
 
 
-def detect_hand(debug: bool = True):
+def detect_hand(button_pipe: Pipe = None, debug: bool = True):
+    tracking_enabled = False
     if debug:
         cv2.namedWindow(WINDOW)
     gpu = torch.device("cpu")
@@ -64,6 +66,11 @@ def detect_hand(debug: bool = True):
         # 03 Calculate points average
         hand_middles = np.mean(np.array(landmarks2.cpu()), axis=1)
 
+        if tracking_enabled:
+            # TODO: Tracking logic
+            # TODO: Listen somehow for button press and toggle tracking_enabled
+            pass
+
         if debug:
             for i in range(len(flags2)):
                 landmark, flag = landmarks2[i], flags2[i]
@@ -94,7 +101,7 @@ def detect_hand(debug: bool = True):
                 (0, 15),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
-                (0, 255, 0),
+                (255, 0, 0),
                 1,
             )
             cv2.putText(
@@ -103,7 +110,25 @@ def detect_hand(debug: bool = True):
                 (0, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
-                (0, 255, 0),
+                (255, 0, 0),
+                1,
+            )
+            cv2.putText(
+                frame,
+                f"Button pipe: {button_pipe}",
+                (0, 45),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 0, 0),
+                1,
+            )
+            cv2.putText(
+                frame,
+                f"Tracking enbaled: {tracking_enabled}",
+                (0, 60),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 0, 0),
                 1,
             )
             frame = cv2.circle(

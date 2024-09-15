@@ -35,7 +35,8 @@ def main():
     # hand detection
     print("Camera starting...")
     hand_detection_proc = multiprocessing.Process(
-        target=lambda: hand_detector.detect_hand(debug=True)
+        target=lambda button_pipe: hand_detector.detect_hand(button_pipe, debug=True), 
+        args=(parent_button_action_conn, ),
     )
     hand_detection_proc.start()
 
